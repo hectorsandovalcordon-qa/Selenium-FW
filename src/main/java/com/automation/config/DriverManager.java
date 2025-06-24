@@ -1,66 +1,66 @@
 package com.automation.config;
 
-import io.github.bonigarcia.wdm.WebDriverManager;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.firefox.FirefoxDriver;
-import org.openqa.selenium.firefox.FirefoxOptions;
-import org.openqa.selenium.edge.EdgeDriver;
-import org.openqa.selenium.edge.EdgeOptions;
+import com.microsoft.playwright.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Duration;
 
 /**
- * Gestor de WebDriver para inicializar diferentes navegadores
+ * Gestor de Playwright para inicializar diferentes navegadores
  */
 public class DriverManager {
     private static final Logger logger = LoggerFactory.getLogger(DriverManager.class);
     private static final Configuration config = Configuration.getInstance();
+    private static Browser browser;
+    private static BrowserContext context;
+    private static Page page;
 
     private DriverManager() {
         // Constructor privado para evitar instanciación
     }
 
     /**
-     * Crea una nueva instancia de WebDriver según la configuración
+     * Crea una nueva instancia de Playwright según la configuración
      */
-    public static WebDriver createDriver() {
+    public static Page createDriver() {
+        Playwright playwright = Playwright.create();
         String browserName = config.getBrowser().toLowerCase();
-        
+
         // Sobrescribir con propiedades del sistema si están definidas
         if (System.getProperty("browser") != null) {
             browserName = System.getProperty("browser").toLowerCase();
         }
-        
+
         logger.info("Creando una nueva instancia del navegador: {}", browserName);
         logger.info("Modo headless: {}", isHeadlessMode());
-        
-        WebDriver driver = switch (browserName) {
-            case "chrome" -> initializeChromeDriver();
-            case "firefox" -> initializeFirefoxDriver();
-            case "edge" -> initializeEdgeDriver();
+
+        browser = switch (browserName) {
+            case "chrome" -> playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(isHeadlessMode()));
+            case "firefox" -> playwright.firefox().launch(new BrowserType.LaunchOptions().setHeadless(isHeadlessMode()));
+            case "edge" -> playwright.chromium().launch(new BrowserType.LaunchOptions().setChannel("msedge").setHeadless(isHeadlessMode()));
             default -> {
                 logger.warn("Navegador no soportado: {}. Usando Chrome por defecto", browserName);
-                yield initializeChromeDriver();
+                yield playwright.chromium().launch(new BrowserType.LaunchOptions().setHeadless(isHeadlessMode()));
             }
         };
 
+        context = browser.newContext();
+        page = context.newPage();
+
         // Configurar timeouts
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(config.getImplicitWait()));
-        driver.manage().timeouts().pageLoadTimeout(Duration.ofSeconds(config.getPageLoadTimeout()));
+        page.setDefaultTimeout(config.getImplicitWait() * 1000); // Convertir segundos a milisegundos
+        page.setDefaultNavigationTimeout(config.getPageLoadTimeout() * 1000); // Convertir segundos a milisegundos
 
         // Maximizar ventana si está configurado y no es headless
         if (config.shouldMaximizeWindow() && !isHeadlessMode()) {
-            driver.manage().window().maximize();
+            page.setViewportSize(1920, 1080);
         }
 
-        logger.info("Instancia de WebDriver creada correctamente");
-        return driver;
+        logger.info("Instancia de Playwright creada correctamente");
+        return page;
     }
-    
+
     /**
      * Verifica si debe ejecutarse en modo headless
      */
@@ -70,69 +70,20 @@ public class DriverManager {
         if (headlessProperty != null) {
             return Boolean.parseBoolean(headlessProperty);
         }
-        
+
         // Luego verificar configuración
         return config.isHeadless();
     }
 
-    private static WebDriver initializeChromeDriver() {
-        WebDriverManager.chromedriver().setup();
-        ChromeOptions options = new ChromeOptions();
-        
-        // Configuración headless mejorada
-        if (isHeadlessMode()) {
-            options.addArguments("--headless=new"); // Usar nuevo modo headless
-            options.addArguments("--disable-gpu");
-            options.addArguments("--window-size=1920,1080"); // Tamaño fijo en headless
+    /**
+     * Cierra el navegador y limpia los recursos
+     */
+    public static void tearDown() {
+        if (context != null) {
+            context.close();
         }
-        
-        // Argumentos comunes para estabilidad
-        options.addArguments("--no-sandbox");
-        options.addArguments("--disable-dev-shm-usage");
-        options.addArguments("--disable-extensions");
-        options.addArguments("--disable-web-security");
-        options.addArguments("--allow-running-insecure-content");
-        options.addArguments("--disable-blink-features=AutomationControlled");
-        options.addArguments("--disable-features=VizDisplayCompositor");
-        
-        // Evitar detección de automatización
-        options.setExperimentalOption("useAutomationExtension", false);
-        options.setExperimentalOption("excludeSwitches", new String[]{"enable-automation"});
-        
-        logger.info("Chrome configurado con headless: {}", isHeadlessMode());
-        return new ChromeDriver(options);
-    }
-
-    private static WebDriver initializeFirefoxDriver() {
-        WebDriverManager.firefoxdriver().setup();
-        FirefoxOptions options = new FirefoxOptions();
-        
-        if (isHeadlessMode()) {
-            options.addArguments("--headless");
-            options.addArguments("--width=1920");
-            options.addArguments("--height=1080");
+        if (browser != null) {
+            browser.close();
         }
-        
-        logger.info("Firefox configurado con headless: {}", isHeadlessMode());
-        return new FirefoxDriver(options);
     }
-
-    private static WebDriver initializeEdgeDriver() {
-        WebDriverManager.edgedriver().setup();
-        EdgeOptions options = new EdgeOptions();
-        
-        if (isHeadlessMode()) {
-            options.addArguments("--headless=new");
-            options.addArguments("--disable-gpu");
-            options.addArguments("--window-size=1920,1080");
-        }
-        
-        // Argumentos comunes para Edge
-        options.addArguments("--no-sandbox");
-        options.addArguments("--disable-dev-shm-usage");
-        options.addArguments("--disable-extensions");
-        
-        logger.info("Edge configurado con headless: {}", isHeadlessMode());
-        return new EdgeDriver(options);
-    }
-} 
+}

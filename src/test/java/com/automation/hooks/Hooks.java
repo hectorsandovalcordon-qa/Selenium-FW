@@ -1,14 +1,12 @@
 package com.automation.hooks;
 
 import com.automation.context.TestContext;
+import com.microsoft.playwright.Page;
 import io.cucumber.java.After;
 import io.cucumber.java.AfterStep;
 import io.cucumber.java.Before;
 import io.cucumber.java.Scenario;
 import io.qameta.allure.Allure;
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
-import org.openqa.selenium.WebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,16 +33,16 @@ public class Hooks {
         logger.info("=======================================================================");
         logger.info("FINALIZANDO ESCENARIO: {} - Estado: {}", scenario.getName(), scenario.getStatus());
         logger.info("=======================================================================");
-        testContext.quitDriver();
+        testContext.quitPage();
     }
 
     @AfterStep
     public void takeScreenshotOnFailure(Scenario scenario) {
         if (scenario.isFailed()) {
             logger.error("El paso ha fallado. Tomando captura de pantalla...");
-            WebDriver driver = testContext.getDriver();
-            byte[] screenshot = ((TakesScreenshot) driver).getScreenshotAs(OutputType.BYTES);
+            Page page = testContext.getPage();
+            byte[] screenshot = page.screenshot(new Page.ScreenshotOptions().setFullPage(true));
             Allure.addAttachment("Screenshot on Failure", new ByteArrayInputStream(screenshot));
         }
     }
-} 
+}

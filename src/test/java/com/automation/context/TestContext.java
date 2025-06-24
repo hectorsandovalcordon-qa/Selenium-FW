@@ -1,37 +1,38 @@
 package com.automation.context;
 
 import com.automation.config.DriverManager;
-import org.openqa.selenium.WebDriver;
+import com.microsoft.playwright.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class TestContext {
-    private WebDriver driver;
+    private Page page;
     private PageObjectManager pageObjectManager;
     private static final Logger logger = LoggerFactory.getLogger(TestContext.class);
 
-    public WebDriver getDriver() {
-        if (driver == null) {
-            logger.info("Creando una nueva instancia de WebDriver para el contexto de prueba.");
-            driver = DriverManager.createDriver();
+    public Page getPage() {
+        if (page == null) {
+            logger.info("Creando una nueva instancia de Page para el contexto de prueba.");
+            page = DriverManager.createDriver();
         }
-        return driver;
+        return page;
     }
 
     public PageObjectManager getPageObjectManager() {
         if (pageObjectManager == null) {
-            pageObjectManager = new PageObjectManager(getDriver());
+            pageObjectManager = new PageObjectManager(getPage());
         }
         return pageObjectManager;
     }
 
-    public void quitDriver() {
-        if (driver != null) {
-            logger.info("Cerrando la instancia de WebDriver del contexto de prueba.");
-            driver.quit();
-            driver = null;
+    public void quitPage() {
+        if (page != null) {
+            logger.info("Cerrando la instancia de Page del contexto de prueba.");
+            page.context().close();
+            page.browser().close();
+            page = null;
         } else {
-            logger.warn("Se intentó cerrar un WebDriver, pero la instancia ya era nula.");
+            logger.warn("Se intentó cerrar un Page, pero la instancia ya era nula.");
         }
     }
-} 
+}

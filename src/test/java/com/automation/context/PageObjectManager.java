@@ -1,18 +1,18 @@
 package com.automation.context;
 
 import com.automation.pages.IzertisHomePage;
-import org.openqa.selenium.WebDriver;
+import com.microsoft.playwright.Page;
 
 public class PageObjectManager {
 
-    private WebDriver driver;
+    private Page page;
     private IzertisHomePage izertisHomePage;
 
-    public PageObjectManager(WebDriver driver) {
-        this.driver = driver;
+    public PageObjectManager(Page page) {
+        this.page = page;
     }
 
     public IzertisHomePage getIzertisHomePage() {
-        return (izertisHomePage == null) ? izertisHomePage = new IzertisHomePage(driver) : izertisHomePage;
+        return (izertisHomePage == null) ? izertisHomePage = new IzertisHomePage(page) : izertisHomePage;
     }
-} 
+}

@@ -6,20 +6,19 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.automation</groupId>
-    <artifactId>izertis-selenium-automation</artifactId>
+    <artifactId>izertis-playwright-automation</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
-    <name>Izertis Selenium Automation</name>
-    <description>Proyecto de automatización con Selenium para izertis.com</description>
+    <name>Izertis Playwright Automation</name>
+    <description>Proyecto de automatización con Playwright para izertis.com</description>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <selenium.version>4.18.1</selenium.version>
+        <playwright.version>1.36.0</playwright.version> <!-- Actualiza a la última versión disponible -->
         <testng.version>7.9.0</testng.version>
-        <webdrivermanager.version>5.7.0</webdrivermanager.version>
         <allure.version>2.25.0</allure.version>
         <slf4j.version>2.0.12</slf4j.version>
         <logback.version>1.5.0</logback.version>
@@ -27,18 +26,11 @@
     </properties>
 
     <dependencies>
-        <!-- Selenium WebDriver -->
+        <!-- Playwright -->
         <dependency>
-            <groupId>org.seleniumhq.selenium</groupId>
-            <artifactId>selenium-java</artifactId>
-            <version>${selenium.version}</version>
-        </dependency>
-
-        <!-- WebDriverManager para gestión automática de drivers -->
-        <dependency>
-            <groupId>io.github.bonigarcia</groupId>
-            <artifactId>webdrivermanager</artifactId>
-            <version>${webdrivermanager.version}</version>
+            <groupId>com.microsoft.playwright</groupId>
+            <artifactId>playwright</artifactId>
+            <version>${playwright.version}</version>
         </dependency>
 
         <!-- TestNG Framework -->
