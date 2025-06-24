@@ -12,7 +12,7 @@ public class TestContext {
 
     public Page getPage() {
         if (page == null) {
-            logger.info("Creando una nueva instancia de Page para el contexto de prueba.");
+            logger.info("Obteniendo instancia de Page desde DriverManager.");
             page = DriverManager.createDriver();
         }
         return page;
@@ -27,10 +27,10 @@ public class TestContext {
 
     public void quitPage() {
         if (page != null) {
-            logger.info("Cerrando la instancia de Page del contexto de prueba.");
-            page.context().close();
-            page.browser().close();
+            logger.info("Limpiando recursos con DriverManager tearDown.");
+            DriverManager.tearDown();
             page = null;
+            pageObjectManager = null;
         } else {
             logger.warn("Se intentó cerrar un Page, pero la instancia ya era nula.");
         }

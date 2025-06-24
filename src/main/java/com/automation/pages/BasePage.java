@@ -8,12 +8,12 @@ import org.slf4j.LoggerFactory;
 /**
  * Clase base para todas las páginas con funcionalidad común usando Playwright
  */
-public abstract class PlaywrightBasePage {
-    protected static final Logger logger = LoggerFactory.getLogger(PlaywrightBasePage.class);
+public abstract class BasePage {
+    protected static final Logger logger = LoggerFactory.getLogger(BasePage.class);
     protected Page page;
     protected Configuration config;
 
-    public PlaywrightBasePage(Page page) {
+    public BasePage(Page page) {
         this.page = page;
         this.config = Configuration.getInstance();
     }

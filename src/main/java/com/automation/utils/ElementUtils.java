@@ -1,78 +1,70 @@
 package com.automation.utils;
 
-import com.automation.config.Configuration;
-import com.microsoft.playwright.Page;
+import com.microsoft.playwright.ElementHandle;
 import com.microsoft.playwright.Locator;
-import com.microsoft.playwright.options.WaitForSelectorState;
+import com.microsoft.playwright.Page;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 /**
- * Utilidades para operaciones comunes con Locator
+ * Utilidades para operaciones comunes con Locator en Playwright
  */
 public class ElementUtils {
+
     private final Logger logger = LoggerFactory.getLogger(ElementUtils.class);
     private final Page page;
+    private final int timeout; // en milisegundos
 
-    public ElementUtils(Page page) {
+    public ElementUtils(Page page, int timeoutInSeconds) {
         this.page = page;
+        this.timeout = timeoutInSeconds * 1000;
     }
 
-    /**
-     * Espera a que un elemento sea clickeable y lo clickea
-     */
     public void clickElement(Locator locator) {
         try {
-            locator.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED));
-            locator.click();
+            locator.waitFor(new Locator.WaitForOptions().setTimeout((double) timeout));
+            locator.click(new Locator.ClickOptions().setTimeout((double) timeout));
             logger.info("Elemento clickeado exitosamente");
         } catch (Exception e) {
-            logger.error("Error al clickear elemento: " + e.getMessage());
+            logger.error("Error al clickear elemento: {}", e.getMessage());
             throw e;
         }
     }
 
-    /**
-     * Espera a que un elemento sea visible y envía texto
-     */
     public void sendKeys(Locator locator, String text) {
         try {
-            locator.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
-            locator.fill(text);
+            locator.waitFor(new Locator.WaitForOptions().setTimeout((double) timeout));
+            locator.fill(""); // clear
+            locator.type(text, new Locator.TypeOptions().setTimeout((double) timeout));
             logger.info("Texto enviado exitosamente: {}", text);
         } catch (Exception e) {
-            logger.error("Error al enviar texto: " + e.getMessage());
+            logger.error("Error al enviar texto: {}", e.getMessage());
             throw e;
         }
     }
 
-    /**
-     * Espera a que un elemento sea visible y obtiene su texto
-     */
     public String getText(Locator locator) {
         try {
-            locator.waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+            locator.waitFor(new Locator.WaitForOptions().setTimeout((double) timeout));
             String text = locator.textContent();
             logger.info("Texto obtenido: {}", text);
-            return text;
+            return text != null ? text.trim() : "";
         } catch (Exception e) {
-            logger.error("Error al obtener texto: " + e.getMessage());
+            logger.error("Error al obtener texto: {}", e.getMessage());
             throw e;
         }
     }
 
-    /**
-     * Verifica si un elemento está presente
-     */
     public boolean isElementPresent(String selector) {
-        return page.locator(selector).count() > 0;
+        try {
+            return page.locator(selector).count() > 0;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
-    /**
-     * Verifica si un elemento está visible
-     */
     public boolean isElementVisible(Locator locator) {
         try {
             return locator.isVisible();
@@ -81,63 +73,50 @@ public class ElementUtils {
         }
     }
 
-    /**
-     * Espera a que un elemento sea visible
-     */
     public Locator waitForElementToBeVisible(String selector) {
-        return page.locator(selector).waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.VISIBLE));
+        Locator locator = page.locator(selector);
+        locator.waitFor(new Locator.WaitForOptions().setTimeout((double) timeout));
+        return locator;
     }
 
-    /**
-     * Espera a que un elemento sea clickeable
-     */
     public Locator waitForElementToBeClickable(String selector) {
-        return page.locator(selector).waitFor(new Locator.WaitForOptions().setState(WaitForSelectorState.ATTACHED));
+        Locator locator = page.locator(selector);
+        locator.waitFor(new Locator.WaitForOptions().setTimeout((double) timeout));
+        return locator;
     }
 
-    /**
-     * Scroll hacia un elemento
-     */
     public void scrollToElement(Locator locator) {
         try {
             locator.scrollIntoViewIfNeeded();
+            page.waitForTimeout(500);
             logger.info("Scroll realizado hacia el elemento");
         } catch (Exception e) {
-            logger.error("Error al hacer scroll: " + e.getMessage());
+            logger.error("Error al hacer scroll: {}", e.getMessage());
             throw new RuntimeException(e);
         }
     }
 
-    /**
-     * Hover sobre un elemento
-     */
     public void hoverOnElement(Locator locator) {
         try {
-            locator.hover();
+            locator.hover(new Locator.HoverOptions().setTimeout((double) timeout));
             logger.info("Hover realizado sobre el elemento");
         } catch (Exception e) {
-            logger.error("Error al hacer hover: " + e.getMessage());
+            logger.error("Error al hacer hover: {}", e.getMessage());
             throw e;
         }
     }
 
-    /**
-     * Selecciona una opción de un dropdown por texto visible
-     */
-    public void selectByVisibleText(Locator locator, String text) {
+    public void selectByVisibleText(Locator selectLocator, String visibleText) {
         try {
-            locator.selectOption(text);
-            logger.info("Opción seleccionada: {}", text);
+            selectLocator.selectOption(new String[] { visibleText });
+            logger.info("Opción seleccionada: {}", visibleText);
         } catch (Exception e) {
-            logger.error("Error al seleccionar opción: " + e.getMessage());
+            logger.error("Error al seleccionar opción: {}", e.getMessage());
             throw e;
         }
     }
 
-    /**
-     * Obtiene todos los elementos que coinciden con el selector
-     */
-    public List<Locator> findElements(String selector) {
-        return page.locator(selector).all();
+    public List<ElementHandle> findElements(String selector) {
+        return page.querySelectorAll(selector);
     }
 }
